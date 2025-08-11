@@ -1,7 +1,9 @@
 import React from 'react';
 
 function VelocityBar({ hours, maxHours, weekNumber, dateRange }) {
-  const height = hours > 0 ? Math.max(4, (hours / maxHours) * 100) : 2;
+  // Calculate flex-grow based on hours relative to maxHours for this client
+  // Use a minimum flex-grow of 0.05 (5%) for visibility, and scale up from there
+  const flexGrow = hours > 0 ? Math.max(0.05, hours / maxHours) : 0.02;
   const isZero = hours === 0;
   
   const tooltipText = dateRange 
@@ -16,7 +18,7 @@ function VelocityBar({ hours, maxHours, weekNumber, dateRange }) {
       <div
         className={`velocity-bar ${isZero ? 'zero' : ''}`}
         style={{
-          height: `${height}%`,
+          flexGrow: flexGrow,
           backgroundColor: isZero ? '#e2e8f0' : undefined
         }}
       >

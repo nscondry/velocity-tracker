@@ -187,6 +187,7 @@ body {
   align-items: flex-end;
   height: 80px;
   padding: 0.5rem 0;
+  min-height: 80px;
 }
 
 .velocity-bar-container {
@@ -214,6 +215,7 @@ body {
   background: linear-gradient(to top, #3b82f6, #60a5fa);
   border-radius: 2px 2px 0 0;
   min-height: 2px;
+  max-height: 100%;
   position: relative;
   transition: all 0.2s;
 }
