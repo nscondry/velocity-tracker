@@ -117,7 +117,7 @@ function App() {
             <p>Client velocity over the last 8 weeks</p>
           </div>
 
-          {data && <PortfolioSummary data={data} />}
+          {data && <PortfolioSummary data={data} showOptimizationProjects={showOptimizationProjects} />}
 
           <div className="controls">
             <input
