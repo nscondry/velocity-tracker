@@ -56,6 +56,11 @@ function ClientRow({ client, maxVelocity, dateRanges, rank }) {
                 fontStyle: 'italic'
               }}>
                 Based on: {latest_project.project_name}
+                {latest_project.start_date && (
+                  <span style={{ marginLeft: '0.5rem' }}>
+                    (started {new Date(latest_project.start_date).toLocaleDateString()})
+                  </span>
+                )}
               </div>
             )}
           </div>

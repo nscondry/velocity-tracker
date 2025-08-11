@@ -9,6 +9,7 @@ function App() {
   const [error, setError] = useState(null);
   const [searchTerm, setSearchTerm] = useState('');
   const [sortBy, setSortBy] = useState('velocity'); // 'velocity' or 'name'
+  const [showOptimizationProjects, setShowOptimizationProjects] = useState(true); // Default to true
 
   useEffect(() => {
     fetchData();
@@ -55,6 +56,15 @@ function App() {
       filtered = filtered.filter(client =>
         client.name.toLowerCase().includes(searchTerm.toLowerCase())
       );
+    }
+    
+    // Filter by optimization projects (if enabled)
+    if (showOptimizationProjects) {
+      filtered = filtered.filter(client => {
+        if (!client.latest_project?.project_name) return false;
+        const projectName = client.latest_project.project_name;
+        return projectName.includes("'24") || projectName.includes("'25");
+      });
     }
     
     // Sort clients
@@ -123,6 +133,15 @@ function App() {
               <option value="name">Sort by Name</option>
             </select>
 
+            <label className="filter-checkbox">
+              <input
+                type="checkbox"
+                checked={showOptimizationProjects}
+                onChange={(e) => setShowOptimizationProjects(e.target.checked)}
+              />
+              <span>Optimization Projects Only</span>
+            </label>
+
             <button
               onClick={fetchData}
               style={{
@@ -146,6 +165,8 @@ function App() {
                 <p>
                   {searchTerm 
                     ? `No clients match "${searchTerm}"`
+                    : showOptimizationProjects
+                    ? 'No optimization projects found (projects with \'24 or \'25 in the name)'
                     : 'No client data available'
                   }
                 </p>

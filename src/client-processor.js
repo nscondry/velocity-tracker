@@ -147,9 +147,64 @@ class ClientProcessor {
       const clientBudgets = clientBudgetMap.get(clientName) || [];
       
       if (clientBudgets.length > 0) {
-        // Sort budgets to find the most recent project
-        // Look for projects with '25 first, then '24, then others
-        const sortedBudgets = clientBudgets.sort((a, b) => {
+        // Fetch project details to get start dates for proper sorting
+        console.log(`📊 Fetching project details for ${clientName}...`);
+        const projectsWithDetails = [];
+        
+        for (const budget of clientBudgets) {
+          try {
+            const projectDetails = await harvestAPI.fetchProjectDetails(budget.project_id);
+            if (projectDetails) {
+              projectsWithDetails.push({
+                ...budget,
+                start_date: projectDetails.starts_on,
+                created_at: projectDetails.created_at,
+                updated_at: projectDetails.updated_at
+              });
+            } else {
+              // Fallback if we can't get details
+              projectsWithDetails.push({
+                ...budget,
+                start_date: null,
+                created_at: null,
+                updated_at: null
+              });
+            }
+            
+            // Rate limiting
+            await new Promise(resolve => setTimeout(resolve, 100));
+          } catch (error) {
+            console.log(`⚠️ Could not fetch details for project ${budget.project_id}:`, error.message);
+            projectsWithDetails.push({
+              ...budget,
+              start_date: null,
+              created_at: null,
+              updated_at: null
+            });
+          }
+        }
+        
+        // Sort projects by start date (newest first), then by creation date, then by name
+        const sortedBudgets = projectsWithDetails.sort((a, b) => {
+          // First try to sort by start date
+          if (a.start_date && b.start_date) {
+            const dateA = new Date(a.start_date);
+            const dateB = new Date(b.start_date);
+            if (dateA.getTime() !== dateB.getTime()) {
+              return dateB.getTime() - dateA.getTime(); // Newest first
+            }
+          }
+          
+          // If start dates are the same or missing, sort by creation date
+          if (a.created_at && b.created_at) {
+            const dateA = new Date(a.created_at);
+            const dateB = new Date(b.created_at);
+            if (dateA.getTime() !== dateB.getTime()) {
+              return dateB.getTime() - dateA.getTime(); // Newest first
+            }
+          }
+          
+          // If dates are the same, fall back to name-based sorting
           const aHas25 = a.project_name.includes("'25");
           const bHas25 = b.project_name.includes("'25");
           const aHas24 = a.project_name.includes("'24");
@@ -177,8 +232,12 @@ class ClientProcessor {
         const latestBudget = sortedBudgets[0];
         client.latest_project = {
           project_id: latestBudget.project_id,
-          project_name: latestBudget.project_name
+          project_name: latestBudget.project_name,
+          start_date: latestBudget.start_date,
+          created_at: latestBudget.created_at
         };
+        
+        console.log(`✅ Selected latest project for ${clientName}: ${latestBudget.project_name} (started: ${latestBudget.start_date || 'unknown'})`);
         
         // Use the actual budget from Harvest API
         if (latestBudget.budget_by === 'project') {

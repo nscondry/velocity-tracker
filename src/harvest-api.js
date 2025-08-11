@@ -158,6 +158,34 @@ class HarvestAPI {
       return [];
     }
   }
+
+  async fetchProjectDetails(projectId) {
+    const url = `${this.baseUrl}/v2/projects/${projectId}`;
+    
+    try {
+      console.log(`📊 Fetching project details for ${projectId}...`);
+      const response = await fetch(url, {
+        headers: {
+          'Authorization': `Bearer ${this.accessToken}`,
+          'Harvest-Account-ID': this.accountId,
+          'User-Agent': 'Velocity-Tracker/1.0'
+        }
+      });
+
+      if (!response.ok) {
+        const errorText = await response.text();
+        console.error(`❌ Project details API error for ${projectId}:`, errorText);
+        return null;
+      }
+
+      const data = await response.json();
+      console.log(`✅ Fetched project details for ${projectId}`);
+      return data;
+    } catch (error) {
+      console.error(`❌ Error fetching project details for ${projectId}:`, error.message);
+      return null;
+    }
+  }
 }
 
 export default HarvestAPI; 
