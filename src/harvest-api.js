@@ -27,8 +27,11 @@ class HarvestAPI {
       per_page: 1000 // Adjust if needed
     });
 
+    const fullUrl = `${url}?${params}`;
+    console.log(`📊 Fetching: ${fullUrl}`);
+
     try {
-      const response = await fetch(`${url}?${params}`, {
+      const response = await fetch(fullUrl, {
         headers: {
           'Authorization': `Bearer ${this.accessToken}`,
           'Harvest-Account-ID': this.accountId,
@@ -36,11 +39,16 @@ class HarvestAPI {
         }
       });
 
+      console.log(`📊 Response status: ${response.status} ${response.statusText}`);
+
       if (!response.ok) {
-        throw new Error(`Harvest API error: ${response.status} ${response.statusText}`);
+        const errorText = await response.text();
+        console.error(`❌ Harvest API error response:`, errorText);
+        throw new Error(`Harvest API error: ${response.status} ${response.statusText} - ${errorText}`);
       }
 
       const data = await response.json();
+      console.log(`📊 Received ${data.results ? data.results.length : data.length || 0} projects for ${fromDate} to ${toDate}`);
       
       // Handle different response structures
       if (data.results && Array.isArray(data.results)) {
@@ -48,11 +56,14 @@ class HarvestAPI {
       } else if (Array.isArray(data)) {
         return this.filterActiveHourlyProjects(data);
       } else {
-        console.log('Unexpected API response structure:', JSON.stringify(data, null, 2));
+        console.log('⚠️ Unexpected API response structure:', JSON.stringify(data, null, 2));
         return [];
       }
     } catch (error) {
-      console.error(`Error fetching data for ${fromDate} to ${toDate}:`, error.message);
+      console.error(`❌ Error fetching data for ${fromDate} to ${toDate}:`, error.message);
+      if (error.name === 'TypeError' && error.message.includes('fetch')) {
+        console.error('🔍 This might be a network or CORS issue. Check your internet connection and API credentials.');
+      }
       return [];
     }
   }
@@ -81,10 +92,16 @@ class HarvestAPI {
           bill_by: 'People' // Assume hourly since we can't check
         },
         total_hours: project.total_hours,
-        billable_hours: project.billable_hours || project.total_hours
+        billable_hours: project.billable_hours || project.total_hours,
+        project_name: project.project_name,
+        project_id: project.project_id,
+        client_name: project.client_name,
+        client_id: project.client_id
       };
     });
   }
+
+
 
   async fetchAllWeeklyData(weeks) {
     const allData = [];
@@ -102,6 +119,44 @@ class HarvestAPI {
     }
     
     return allData;
+  }
+
+  async fetchProjectBudgetData() {
+    const url = `${this.baseUrl}/v2/reports/project_budget`;
+    const params = new URLSearchParams({
+      page: 1,
+      per_page: 2000,
+      is_active: true
+    });
+
+    const fullUrl = `${url}?${params}`;
+    console.log(`📊 Fetching project budget data: ${fullUrl}`);
+
+    try {
+      const response = await fetch(fullUrl, {
+        headers: {
+          'Authorization': `Bearer ${this.accessToken}`,
+          'Harvest-Account-ID': this.accountId,
+          'User-Agent': 'Velocity-Tracker/1.0'
+        }
+      });
+
+      console.log(`📊 Project budget response status: ${response.status} ${response.statusText}`);
+
+      if (!response.ok) {
+        const errorText = await response.text();
+        console.error(`❌ Project budget API error response:`, errorText);
+        throw new Error(`Project budget API error: ${response.status} ${response.statusText} - ${errorText}`);
+      }
+
+      const data = await response.json();
+      console.log(`📊 Received ${data.results ? data.results.length : 0} projects with budget data`);
+      
+      return data.results || [];
+    } catch (error) {
+      console.error(`❌ Error fetching project budget data:`, error.message);
+      return [];
+    }
   }
 }
 

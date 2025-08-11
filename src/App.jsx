@@ -19,14 +19,26 @@ function App() {
       setLoading(true);
       setError(null);
       
+      console.log('🔄 Fetching velocity data...');
       const response = await fetch('/api/velocity');
+      
       if (!response.ok) {
-        throw new Error(`HTTP error! status: ${response.status}`);
+        const errorText = await response.text();
+        let errorData;
+        try {
+          errorData = JSON.parse(errorText);
+        } catch {
+          errorData = { error: errorText };
+        }
+        
+        throw new Error(`Server error (${response.status}): ${errorData.error || errorText}`);
       }
       
       const result = await response.json();
+      console.log('✅ Received velocity data:', result);
       setData(result);
     } catch (err) {
+      console.error('❌ Error fetching data:', err);
       setError(err.message);
     } finally {
       setLoading(false);
@@ -82,86 +94,86 @@ function App() {
     );
   }
 
-  const clients = filteredAndSortedClients();
+        const clients = filteredAndSortedClients();
 
-  return (
-    <div className="app">
-      <div className="header">
-        <h1>🚀 Velocity Tracker</h1>
-        <p>Client velocity over the last 8 weeks</p>
-      </div>
-
-      {data && <PortfolioSummary data={data} />}
-
-      <div className="controls">
-        <input
-          type="text"
-          placeholder="Search clients..."
-          value={searchTerm}
-          onChange={(e) => setSearchTerm(e.target.value)}
-          className="search-input"
-        />
-        
-        <select
-          value={sortBy}
-          onChange={(e) => setSortBy(e.target.value)}
-          className="filter-select"
-        >
-          <option value="velocity">Sort by Velocity</option>
-          <option value="name">Sort by Name</option>
-        </select>
-
-        <button
-          onClick={fetchData}
-          style={{
-            padding: '0.75rem 1rem',
-            background: '#3b82f6',
-            color: 'white',
-            border: 'none',
-            borderRadius: '8px',
-            cursor: 'pointer',
-            fontSize: '1rem'
-          }}
-        >
-          🔄 Refresh
-        </button>
-      </div>
-
-      <div className="clients-container">
-        {clients.length === 0 ? (
-          <div className="empty-state">
-            <h3>No clients found</h3>
-            <p>
-              {searchTerm 
-                ? `No clients match "${searchTerm}"`
-                : 'No client data available'
-              }
-            </p>
+      return (
+        <div className="app">
+          <div className="header">
+            <h1>🚀 Velocity Tracker</h1>
+            <p>Client velocity over the last 8 weeks</p>
           </div>
-        ) : (
-          <>
-            {clients.map((client, index) => (
-              <ClientRow
-                key={client.name}
-                client={client}
-                maxVelocity={Math.max(...clients.map(c => c.avg_velocity))}
-                dateRanges={data?.dateRanges}
-                rank={index + 1}
-              />
-            ))}
+
+          {data && <PortfolioSummary data={data} />}
+
+          <div className="controls">
+            <input
+              type="text"
+              placeholder="Search clients..."
+              value={searchTerm}
+              onChange={(e) => setSearchTerm(e.target.value)}
+              className="search-input"
+            />
             
-            {data?.dateRanges && (
-              <div className="week-labels">
-                {data.dateRanges.map((range, index) => (
-                  <div key={index} className="week-label">
-                    W{range.week}
-                  </div>
-                ))}
+            <select
+              value={sortBy}
+              onChange={(e) => setSortBy(e.target.value)}
+              className="filter-select"
+            >
+              <option value="velocity">Sort by Velocity</option>
+              <option value="name">Sort by Name</option>
+            </select>
+
+            <button
+              onClick={fetchData}
+              style={{
+                padding: '0.75rem 1rem',
+                background: '#3b82f6',
+                color: 'white',
+                border: 'none',
+                borderRadius: '8px',
+                cursor: 'pointer',
+                fontSize: '1rem'
+              }}
+            >
+              🔄 Refresh
+            </button>
+          </div>
+
+          <div className="clients-container">
+            {clients.length === 0 ? (
+              <div className="empty-state">
+                <h3>No clients found</h3>
+                <p>
+                  {searchTerm 
+                    ? `No clients match "${searchTerm}"`
+                    : 'No client data available'
+                  }
+                </p>
               </div>
+            ) : (
+              <>
+                {clients.map((client, index) => (
+                  <ClientRow
+                    key={client.name}
+                    client={client}
+                    maxVelocity={Math.max(...clients.map(c => c.avg_velocity))}
+                    dateRanges={data?.dateRanges}
+                    rank={index + 1}
+                  />
+                ))}
+                
+                {data?.dateRanges && (
+                  <div className="week-labels">
+                    {data.dateRanges.map((range, index) => (
+                      <div key={index} className="week-label">
+                        W{range.week}
+                      </div>
+                    ))}
+                  </div>
+                )}
+              </>
             )}
-          </>
-        )}
-      </div>
+          </div>
 
       {data && (
         <div style={{ marginTop: '2rem', textAlign: 'center', color: '#64748b', fontSize: '0.875rem' }}>

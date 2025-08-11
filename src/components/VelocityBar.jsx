@@ -9,15 +9,20 @@ function VelocityBar({ hours, maxHours, weekNumber, dateRange }) {
     : `Week ${weekNumber}: ${hours.toFixed(1)}h`;
 
   return (
-    <div
-      className={`velocity-bar ${isZero ? 'zero' : ''}`}
-      style={{
-        height: `${height}%`,
-        backgroundColor: isZero ? '#e2e8f0' : undefined
-      }}
-    >
-      <div className="bar-tooltip">
-        {tooltipText}
+    <div className="velocity-bar-container">
+      <div className="bar-hours-label">
+        {hours > 0 ? hours.toFixed(1) : '0'}
+      </div>
+      <div
+        className={`velocity-bar ${isZero ? 'zero' : ''}`}
+        style={{
+          height: `${height}%`,
+          backgroundColor: isZero ? '#e2e8f0' : undefined
+        }}
+      >
+        <div className="bar-tooltip">
+          {tooltipText}
+        </div>
       </div>
     </div>
   );

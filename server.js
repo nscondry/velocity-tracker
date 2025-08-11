@@ -13,14 +13,25 @@ const app = express();
 const PORT = process.env.PORT || 3000;
 
 // Middleware
-app.use(cors());
+app.use(cors({
+  origin: ['http://localhost:3000', 'http://localhost:5173', 'http://127.0.0.1:3000', 'http://127.0.0.1:5173'],
+  credentials: true
+}));
 app.use(express.json());
 app.use(express.static(path.join(__dirname, 'dist')));
 
 // Initialize services
-const harvestAPI = new HarvestAPI();
-const clientProcessor = new ClientProcessor();
-const dateUtils = new DateUtils();
+let harvestAPI, clientProcessor, dateUtils;
+
+try {
+  harvestAPI = new HarvestAPI();
+  clientProcessor = new ClientProcessor();
+  dateUtils = new DateUtils();
+  console.log('✅ Services initialized successfully');
+} catch (error) {
+  console.error('❌ Failed to initialize services:', error.message);
+  process.exit(1);
+}
 
 // API Routes
 app.get('/api/velocity', async (req, res) => {
@@ -29,20 +40,38 @@ app.get('/api/velocity', async (req, res) => {
     
     // Generate 8 weeks of date ranges
     const weeklyRanges = dateUtils.generateWeeklyRanges(8);
+    console.log('📅 Generated date ranges:', weeklyRanges.length, 'weeks');
     
     // Fetch data from Harvest API
+    console.log('📊 Fetching data from Harvest API...');
     const weeklyData = await harvestAPI.fetchAllWeeklyData(weeklyRanges);
     
     if (weeklyData.length === 0) {
-      return res.status(404).json({ error: 'No data found' });
+      console.log('⚠️ No weekly data found');
+      return res.status(404).json({ error: 'No data found from Harvest API' });
     }
 
+    console.log('✅ Fetched', weeklyData.length, 'weeks of data');
+
     // Process and aggregate data by client
-    const clientData = clientProcessor.aggregateByClient(weeklyData);
+    let clientData = [];
+    try {
+      console.log('🔄 Processing client data...');
+      clientData = await clientProcessor.aggregateByClient(weeklyData, harvestAPI);
+    } catch (error) {
+      console.error('❌ Error processing client data:', error);
+      return res.status(500).json({ 
+        error: 'Failed to process client data',
+        details: error.message 
+      });
+    }
     
     if (clientData.length === 0) {
+      console.log('⚠️ No client data found after processing');
       return res.status(404).json({ error: 'No client data found' });
     }
+
+    console.log('✅ Processed', clientData.length, 'clients');
 
     // Calculate velocities
     const velocityData = clientProcessor.calculateVelocities(clientData);
@@ -55,14 +84,17 @@ app.get('/api/velocity', async (req, res) => {
       description: dateUtils.getDateRangeDescription(range)
     }));
 
-    res.json({
+    const response = {
       ...velocityData,
       dateRanges,
       generatedAt: new Date().toISOString()
-    });
+    };
+
+    console.log('✅ Sending response with', velocityData.clients.length, 'clients');
+    res.json(response);
 
   } catch (error) {
-    console.error('Error fetching velocity data:', error);
+    console.error('❌ Error fetching velocity data:', error);
     res.status(500).json({ 
       error: error.message,
       details: 'Check server logs for more information'
@@ -71,7 +103,15 @@ app.get('/api/velocity', async (req, res) => {
 });
 
 app.get('/api/health', (req, res) => {
-  res.json({ status: 'ok', timestamp: new Date().toISOString() });
+  res.json({ 
+    status: 'ok', 
+    timestamp: new Date().toISOString(),
+    services: {
+      harvestAPI: !!harvestAPI,
+      clientProcessor: !!clientProcessor,
+      dateUtils: !!dateUtils
+    }
+  });
 });
 
 // Serve React app for all other routes
@@ -82,4 +122,5 @@ app.get('*', (req, res) => {
 app.listen(PORT, () => {
   console.log(`🚀 Velocity Tracker Web Server running on http://localhost:${PORT}`);
   console.log(`📊 API available at http://localhost:${PORT}/api/velocity`);
+  console.log(`🏥 Health check available at http://localhost:${PORT}/api/health`);
 }); 
