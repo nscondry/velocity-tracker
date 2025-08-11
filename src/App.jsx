@@ -63,7 +63,11 @@ function App() {
       filtered = filtered.filter(client => {
         if (!client.latest_project?.project_name) return false;
         const projectName = client.latest_project.project_name;
-        return projectName.includes("'24") || projectName.includes("'25");
+        return projectName.includes("'24") || 
+               projectName.includes("'25") || 
+               projectName.includes(" 25") || 
+               projectName.includes(" 50") || 
+               projectName.includes(" 100");
       });
     }
     
@@ -139,7 +143,7 @@ function App() {
                 checked={showOptimizationProjects}
                 onChange={(e) => setShowOptimizationProjects(e.target.checked)}
               />
-              <span>Optimization Projects Only</span>
+              <span>Optimization Projects Only (25/50/100h packs)</span>
             </label>
 
             <button
@@ -166,7 +170,7 @@ function App() {
                   {searchTerm 
                     ? `No clients match "${searchTerm}"`
                     : showOptimizationProjects
-                    ? 'No optimization projects found (projects with \'24 or \'25 in the name)'
+                    ? 'No optimization projects found (projects with \'24, \'25, 25, 50, or 100 in the name)'
                     : 'No client data available'
                   }
                 </p>
