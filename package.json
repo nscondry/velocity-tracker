@@ -1,0 +1,18 @@
+{
+  "name": "velocity-tracker",
+  "version": "1.0.0",
+  "description": "A tool to calculate weekly client velocity from Harvest time tracking data",
+  "main": "index.js",
+  "type": "module",
+  "scripts": {
+    "start": "node index.js",
+    "dev": "node --watch index.js"
+  },
+  "dependencies": {
+    "node-fetch": "^3.3.2",
+    "dotenv": "^16.3.1"
+  },
+  "keywords": ["harvest", "velocity", "time-tracking", "analytics"],
+  "author": "",
+  "license": "MIT"
+} 
