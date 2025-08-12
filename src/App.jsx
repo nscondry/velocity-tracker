@@ -10,6 +10,8 @@ function App() {
   const [searchTerm, setSearchTerm] = useState('');
   const [sortBy, setSortBy] = useState('velocity'); // 'velocity' or 'name'
   const [showOptimizationProjects, setShowOptimizationProjects] = useState(true); // Default to true
+  const [logs, setLogs] = useState([]);
+  const [progress, setProgress] = useState(0);
 
   useEffect(() => {
     fetchData();
@@ -19,8 +21,17 @@ function App() {
     try {
       setLoading(true);
       setError(null);
+      setLogs([]);
+      setProgress(0);
       
-      console.log('🔄 Fetching velocity data...');
+      // Simulate progress based on typical processing time
+      const progressInterval = setInterval(() => {
+        setProgress(prev => {
+          if (prev >= 90) return prev;
+          return prev + Math.random() * 10;
+        });
+      }, 500);
+      
       const response = await fetch('/api/velocity');
       
       if (!response.ok) {
@@ -36,7 +47,14 @@ function App() {
       }
       
       const result = await response.json();
-      console.log('✅ Received velocity data:', result);
+      
+      // Add server logs to the logs state
+      if (result.logs && Array.isArray(result.logs)) {
+        setLogs(result.logs);
+      }
+      
+      setProgress(100);
+      clearInterval(progressInterval);
       setData(result);
     } catch (err) {
       console.error('❌ Error fetching data:', err);
@@ -89,6 +107,31 @@ function App() {
         <div className="loading">
           <h2>🚀 Loading velocity data...</h2>
           <p>Fetching the last 8 weeks from Harvest</p>
+          
+          <div style={{ marginTop: '2rem', width: '100%', maxWidth: '400px', marginLeft: 'auto', marginRight: 'auto' }}>
+            <div style={{ 
+              width: '100%', 
+              height: '20px', 
+              backgroundColor: 'rgba(255,255,255,0.1)', 
+              borderRadius: '10px',
+              overflow: 'hidden'
+            }}>
+              <div style={{
+                width: `${progress}%`,
+                height: '100%',
+                backgroundColor: '#3b82f6',
+                transition: 'width 0.3s ease',
+                borderRadius: '10px'
+              }} />
+            </div>
+            <p style={{ color: '#64748b', marginTop: '0.5rem', fontSize: '0.9rem', textAlign: 'center' }}>
+              {Math.round(progress)}% complete
+            </p>
+          </div>
+          
+          <p style={{ color: '#64748b', marginTop: '2rem', fontSize: '0.8rem', textAlign: 'center' }}>
+            Check the terminal for detailed progress logs
+          </p>
         </div>
       </div>
     );

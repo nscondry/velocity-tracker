@@ -20,6 +20,9 @@ app.use(cors({
 app.use(express.json());
 app.use(express.static(path.join(__dirname, 'dist')));
 
+// Global logs array to capture server logs
+let serverLogs = [];
+
 // Initialize services
 let harvestAPI, clientProcessor, dateUtils;
 
@@ -36,11 +39,22 @@ try {
 // API Routes
 app.get('/api/velocity', async (req, res) => {
   try {
+    // Clear previous logs
+    serverLogs = [];
+    
+    // Capture console.log output
+    const originalConsoleLog = console.log;
+    console.log = (...args) => {
+      const message = args.join(' ');
+      originalConsoleLog(...args);
+      serverLogs.push(message);
+    };
+    
     console.log('🚀 Fetching velocity data...');
     
     // Generate 8 weeks of date ranges
     const weeklyRanges = dateUtils.generateWeeklyRanges(8);
-    console.log('📅 Generated date ranges:', weeklyRanges.length, 'weeks');
+    console.log(`📅 Generated date ranges: ${weeklyRanges.length} weeks`);
     
     // Fetch data from Harvest API
     console.log('📊 Fetching data from Harvest API...');
@@ -51,7 +65,7 @@ app.get('/api/velocity', async (req, res) => {
       return res.status(404).json({ error: 'No data found from Harvest API' });
     }
 
-    console.log('✅ Fetched', weeklyData.length, 'weeks of data');
+    console.log(`✅ Fetched ${weeklyData.length} weeks of data`);
 
     // Process and aggregate data by client
     let clientData = [];
@@ -62,16 +76,17 @@ app.get('/api/velocity', async (req, res) => {
       console.error('❌ Error processing client data:', error);
       return res.status(500).json({ 
         error: 'Failed to process client data',
-        details: error.message 
+        details: error.message,
+        logs: serverLogs
       });
     }
     
     if (clientData.length === 0) {
       console.log('⚠️ No client data found after processing');
-      return res.status(404).json({ error: 'No client data found' });
+      return res.status(404).json({ error: 'No client data found', logs: serverLogs });
     }
 
-    console.log('✅ Processed', clientData.length, 'clients');
+    console.log(`✅ Processed ${clientData.length} clients`);
 
     // Calculate velocities
     const velocityData = clientProcessor.calculateVelocities(clientData);
@@ -87,17 +102,23 @@ app.get('/api/velocity', async (req, res) => {
     const response = {
       ...velocityData,
       dateRanges,
-      generatedAt: new Date().toISOString()
+      generatedAt: new Date().toISOString(),
+      logs: serverLogs
     };
 
-    console.log('✅ Sending response with', velocityData.clients.length, 'clients');
+    console.log(`✅ Sending response with ${velocityData.clients.length} clients`);
+    
+    // Restore original console.log
+    console.log = originalConsoleLog;
+    
     res.json(response);
 
   } catch (error) {
     console.error('❌ Error fetching velocity data:', error);
     res.status(500).json({ 
       error: error.message,
-      details: 'Check server logs for more information'
+      details: 'Check server logs for more information',
+      logs: serverLogs
     });
   }
 });
