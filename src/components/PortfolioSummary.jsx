@@ -45,16 +45,20 @@ function PortfolioSummary({ data, showOptimizationProjects }) {
     };
   }, [filteredClients]);
 
+  // Helper function to format date range for display
+  const formatDateRange = (startDate, endDate) => {
+    const formatDate = (date) => {
+      return date.toLocaleDateString('en-US', { 
+        month: 'short', 
+        day: 'numeric',
+        year: 'numeric'
+      });
+    };
+    return `${formatDate(startDate)} - ${formatDate(endDate)}`;
+  };
+
   // Calculate time period data
   const timePeriodData = useMemo(() => {
-    const now = new Date();
-    const currentWeekStart = new Date(now);
-    currentWeekStart.setDate(now.getDate() - now.getDay());
-    const lastWeekStart = new Date(currentWeekStart);
-    lastWeekStart.setDate(lastWeekStart.getDate() - 7);
-    
-    const currentMonthStart = new Date(now.getFullYear(), now.getMonth(), 1);
-    const lastMonthStart = new Date(now.getFullYear(), now.getMonth() - 1, 1);
     
     // Helper function to get hours for a date range
     const getHoursForDateRange = (startDate, endDate) => {
@@ -87,62 +91,57 @@ function PortfolioSummary({ data, showOptimizationProjects }) {
     };
 
     // Calculate current week (most recent week)
-    const currentWeekData = getHoursForDateRange(
-      new Date(dateRanges?.[7]?.from || new Date()),
-      new Date(dateRanges?.[7]?.to || new Date())
-    );
+    const currentWeekStart = new Date(dateRanges?.[7]?.from || new Date());
+    const currentWeekEnd = new Date(dateRanges?.[7]?.to || new Date());
+    const currentWeekData = getHoursForDateRange(currentWeekStart, currentWeekEnd);
 
     // Calculate last week (second most recent week)
-    const lastWeekData = getHoursForDateRange(
-      new Date(dateRanges?.[6]?.from || new Date()),
-      new Date(dateRanges?.[6]?.to || new Date())
-    );
+    const lastWeekStart = new Date(dateRanges?.[6]?.from || new Date());
+    const lastWeekEnd = new Date(dateRanges?.[6]?.to || new Date());
+    const lastWeekData = getHoursForDateRange(lastWeekStart, lastWeekEnd);
 
     // Calculate this month (last 4 weeks)
-    const thisMonthData = getHoursForDateRange(
-      new Date(dateRanges?.[4]?.from || new Date()),
-      new Date(dateRanges?.[7]?.to || new Date())
-    );
+    const thisMonthStart = new Date(dateRanges?.[4]?.from || new Date());
+    const thisMonthEnd = new Date(dateRanges?.[7]?.to || new Date());
+    const thisMonthData = getHoursForDateRange(thisMonthStart, thisMonthEnd);
 
     // Calculate last month (weeks 1-4)
-    const lastMonthData = getHoursForDateRange(
-      new Date(dateRanges?.[0]?.from || new Date()),
-      new Date(dateRanges?.[3]?.to || new Date())
-    );
+    const lastMonthStart = new Date(dateRanges?.[0]?.from || new Date());
+    const lastMonthEnd = new Date(dateRanges?.[3]?.to || new Date());
+    const lastMonthData = getHoursForDateRange(lastMonthStart, lastMonthEnd);
 
     // Calculate all time (all 8 weeks)
-    const allTimeData = getHoursForDateRange(
-      new Date(dateRanges?.[0]?.from || new Date()),
-      new Date(dateRanges?.[7]?.to || new Date())
-    );
+    const allTimeStart = new Date(dateRanges?.[0]?.from || new Date());
+    const allTimeEnd = new Date(dateRanges?.[7]?.to || new Date());
+    const allTimeData = getHoursForDateRange(allTimeStart, allTimeEnd);
 
     return {
       'this-week': {
-        title: 'This Week',
+        title: `This Week (${formatDateRange(currentWeekStart, currentWeekEnd)})`,
         data: currentWeekData,
         total: currentWeekData.reduce((sum, item) => sum + item.hours, 0),
         previousTotal: lastWeekData.reduce((sum, item) => sum + item.hours, 0)
       },
       'last-week': {
-        title: 'Last Week',
+        title: `Last Week (${formatDateRange(lastWeekStart, lastWeekEnd)})`,
         data: lastWeekData,
         total: lastWeekData.reduce((sum, item) => sum + item.hours, 0),
         previousTotal: 0 // No previous week to compare
       },
       'this-month': {
-        title: 'This Month',
+        title: `This Month (${formatDateRange(thisMonthStart, thisMonthEnd)})`,
         data: thisMonthData,
         total: thisMonthData.reduce((sum, item) => sum + item.hours, 0),
         previousTotal: lastMonthData.reduce((sum, item) => sum + item.hours, 0)
       },
       'last-month': {
-        title: 'Last Month',
+        title: `Last Month (${formatDateRange(lastMonthStart, lastMonthEnd)})`,
         data: lastMonthData,
         total: lastMonthData.reduce((sum, item) => sum + item.hours, 0),
         previousTotal: 0 // No previous month to compare
       },
       'all-time': {
-        title: 'All Time (8 weeks)',
+        title: `All Time (${formatDateRange(allTimeStart, allTimeEnd)})`,
         data: allTimeData,
         total: allTimeData.reduce((sum, item) => sum + item.hours, 0),
         previousTotal: 0 // No previous period to compare
