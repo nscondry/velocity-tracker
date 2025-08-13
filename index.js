@@ -39,7 +39,7 @@ class VelocityTracker {
 
       // Process and aggregate data by client
       console.log('🔧 Processing client data...');
-      const clientData = this.clientProcessor.aggregateByClient(weeklyData);
+      const clientData = await this.clientProcessor.aggregateByClient(weeklyData, this.harvestAPI);
       
       if (clientData.length === 0) {
         console.log('📊 No client data found for the selected time period.');
