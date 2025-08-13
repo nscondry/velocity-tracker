@@ -20,12 +20,12 @@ function PortfolioSummary({ data, showOptimizationProjects }) {
     });
   }, [clients, showOptimizationProjects]);
 
-  // Calculate weekly totals for the filtered clients
-  const weeklyTotals = useMemo(() => {
-    const totals = new Array(8).fill(0);
+  // Calculate monthly totals for the filtered clients
+  const monthlyTotals = useMemo(() => {
+    const totals = new Array(6).fill(0);
     filteredClients.forEach(client => {
-      client.weekly_hours.forEach((hours, weekIndex) => {
-        totals[weekIndex] += hours;
+      client.monthly_hours.forEach((hours, monthIndex) => {
+        totals[monthIndex] += hours;
       });
     });
     return totals;
@@ -34,7 +34,7 @@ function PortfolioSummary({ data, showOptimizationProjects }) {
   // Calculate portfolio stats for filtered clients
   const portfolioStats = useMemo(() => {
     const totalVelocity = filteredClients.reduce((sum, client) => sum + client.avg_velocity, 0);
-    const totalHours = totalVelocity * 8;
+    const totalHours = totalVelocity * 6; // 6 months
     const activeClients = filteredClients.filter(client => client.avg_velocity > 0).length;
     
     return {
@@ -65,14 +65,14 @@ function PortfolioSummary({ data, showOptimizationProjects }) {
       const clientData = [];
       filteredClients.forEach(client => {
         let totalHours = 0;
-        let weekHours = 0;
+        let monthHours = 0;
         
         // Calculate hours for the date range
-        client.weekly_hours.forEach((hours, weekIndex) => {
-          const weekDate = new Date(dateRanges?.[weekIndex]?.to || new Date());
-          if (weekDate >= startDate && weekDate <= endDate) {
+        client.monthly_hours.forEach((hours, monthIndex) => {
+          const monthDate = new Date(dateRanges?.[monthIndex]?.to || new Date());
+          if (monthDate >= startDate && monthDate <= endDate) {
             totalHours += hours;
-            weekHours = hours; // For single week periods
+            monthHours = hours; // For single month periods
           }
         });
         
@@ -81,7 +81,7 @@ function PortfolioSummary({ data, showOptimizationProjects }) {
             client: client.name,
             project: client.latest_project?.project_name || 'Unknown',
             hours: totalHours,
-            weekHours: weekHours,
+            monthHours: monthHours,
             avgVelocity: client.avg_velocity,
             totalHoursUsed: client.total_hours_used
           });
@@ -90,48 +90,36 @@ function PortfolioSummary({ data, showOptimizationProjects }) {
       return clientData;
     };
 
-    // Calculate current week (most recent week)
-    const currentWeekStart = new Date(dateRanges?.[7]?.from || new Date());
-    const currentWeekEnd = new Date(dateRanges?.[7]?.to || new Date());
-    const currentWeekData = getHoursForDateRange(currentWeekStart, currentWeekEnd);
+    // Calculate current month (most recent month)
+    const currentMonthStart = new Date(dateRanges?.[5]?.from || new Date());
+    const currentMonthEnd = new Date(dateRanges?.[5]?.to || new Date());
+    const currentMonthData = getHoursForDateRange(currentMonthStart, currentMonthEnd);
 
-    // Calculate last week (second most recent week)
-    const lastWeekStart = new Date(dateRanges?.[6]?.from || new Date());
-    const lastWeekEnd = new Date(dateRanges?.[6]?.to || new Date());
-    const lastWeekData = getHoursForDateRange(lastWeekStart, lastWeekEnd);
-
-    // Calculate this month (last 4 weeks)
-    const thisMonthStart = new Date(dateRanges?.[4]?.from || new Date());
-    const thisMonthEnd = new Date(dateRanges?.[7]?.to || new Date());
-    const thisMonthData = getHoursForDateRange(thisMonthStart, thisMonthEnd);
-
-    // Calculate last month (weeks 1-4)
-    const lastMonthStart = new Date(dateRanges?.[0]?.from || new Date());
-    const lastMonthEnd = new Date(dateRanges?.[3]?.to || new Date());
+    // Calculate last month (second most recent month)
+    const lastMonthStart = new Date(dateRanges?.[4]?.from || new Date());
+    const lastMonthEnd = new Date(dateRanges?.[4]?.to || new Date());
     const lastMonthData = getHoursForDateRange(lastMonthStart, lastMonthEnd);
 
-    // Calculate all time (all 8 weeks)
+    // Calculate this quarter (last 3 months)
+    const thisQuarterStart = new Date(dateRanges?.[3]?.from || new Date());
+    const thisQuarterEnd = new Date(dateRanges?.[5]?.to || new Date());
+    const thisQuarterData = getHoursForDateRange(thisQuarterStart, thisQuarterEnd);
+
+    // Calculate last quarter (first 3 months)
+    const lastQuarterStart = new Date(dateRanges?.[0]?.from || new Date());
+    const lastQuarterEnd = new Date(dateRanges?.[2]?.to || new Date());
+    const lastQuarterData = getHoursForDateRange(lastQuarterStart, lastQuarterEnd);
+
+    // Calculate all time (all 6 months)
     const allTimeStart = new Date(dateRanges?.[0]?.from || new Date());
-    const allTimeEnd = new Date(dateRanges?.[7]?.to || new Date());
+    const allTimeEnd = new Date(dateRanges?.[5]?.to || new Date());
     const allTimeData = getHoursForDateRange(allTimeStart, allTimeEnd);
 
     return {
-      'this-week': {
-        title: `This Week (${formatDateRange(currentWeekStart, currentWeekEnd)})`,
-        data: currentWeekData,
-        total: currentWeekData.reduce((sum, item) => sum + item.hours, 0),
-        previousTotal: lastWeekData.reduce((sum, item) => sum + item.hours, 0)
-      },
-      'last-week': {
-        title: `Last Week (${formatDateRange(lastWeekStart, lastWeekEnd)})`,
-        data: lastWeekData,
-        total: lastWeekData.reduce((sum, item) => sum + item.hours, 0),
-        previousTotal: 0 // No previous week to compare
-      },
       'this-month': {
-        title: `This Month (${formatDateRange(thisMonthStart, thisMonthEnd)})`,
-        data: thisMonthData,
-        total: thisMonthData.reduce((sum, item) => sum + item.hours, 0),
+        title: `This Month (${formatDateRange(currentMonthStart, currentMonthEnd)})`,
+        data: currentMonthData,
+        total: currentMonthData.reduce((sum, item) => sum + item.hours, 0),
         previousTotal: lastMonthData.reduce((sum, item) => sum + item.hours, 0)
       },
       'last-month': {
@@ -139,6 +127,18 @@ function PortfolioSummary({ data, showOptimizationProjects }) {
         data: lastMonthData,
         total: lastMonthData.reduce((sum, item) => sum + item.hours, 0),
         previousTotal: 0 // No previous month to compare
+      },
+      'this-quarter': {
+        title: `This Quarter (${formatDateRange(thisQuarterStart, thisQuarterEnd)})`,
+        data: thisQuarterData,
+        total: thisQuarterData.reduce((sum, item) => sum + item.hours, 0),
+        previousTotal: lastQuarterData.reduce((sum, item) => sum + item.hours, 0)
+      },
+      'last-quarter': {
+        title: `Last Quarter (${formatDateRange(lastQuarterStart, lastQuarterEnd)})`,
+        data: lastQuarterData,
+        total: lastQuarterData.reduce((sum, item) => sum + item.hours, 0),
+        previousTotal: 0 // No previous quarter to compare
       },
       'all-time': {
         title: `All Time (${formatDateRange(allTimeStart, allTimeEnd)})`,
@@ -177,7 +177,7 @@ function PortfolioSummary({ data, showOptimizationProjects }) {
     }));
   };
 
-  const maxWeeklyHours = Math.max(...weeklyTotals, 1);
+  const maxMonthlyHours = Math.max(...monthlyTotals, 1);
 
   // Calculate change percentage and direction
   const getChangeIndicator = (current, previous) => {
@@ -201,11 +201,11 @@ function PortfolioSummary({ data, showOptimizationProjects }) {
       <div className="portfolio-stats">
         <div className="stat">
           <span className="stat-value">{portfolioStats.portfolio_velocity.toFixed(1)}</span>
-          <span className="stat-label">Hours/Week Average</span>
+          <span className="stat-label">Hours/Month Average</span>
         </div>
         <div className="stat">
           <span className="stat-value">{portfolioStats.total_hours.toFixed(0)}</span>
-          <span className="stat-label">Total Hours (8 weeks)</span>
+          <span className="stat-label">Total Hours (6 months)</span>
         </div>
         <div className="stat">
           <span className="stat-value">{portfolioStats.total_clients}</span>
@@ -217,29 +217,29 @@ function PortfolioSummary({ data, showOptimizationProjects }) {
         </div>
       </div>
 
-      {/* Weekly Hours Bar Graph */}
-      <div className="weekly-overview">
-        <h3>📊 Weekly Hours Overview</h3>
-        <div className="weekly-bars">
-          {weeklyTotals.map((total, index) => (
-            <div key={index} className="weekly-bar-container">
-              <div className="weekly-bar-label">
-                {dateRanges?.[index]?.description || `W${index + 1}`}
+      {/* Monthly Hours Bar Graph */}
+      <div className="monthly-overview">
+        <h3>📊 Monthly Hours Overview</h3>
+        <div className="monthly-bars">
+          {monthlyTotals.map((total, index) => (
+            <div key={index} className="monthly-bar-container">
+              <div className="monthly-bar-label">
+                {dateRanges?.[index]?.description || `M${index + 1}`}
               </div>
-              <div className="weekly-bar">
+              <div className="monthly-bar">
                 <div 
-                  className="weekly-bar-fill"
+                  className="monthly-bar-fill"
                   style={{ 
-                    height: `${(total / maxWeeklyHours) * 100}%`,
+                    height: `${(total / maxMonthlyHours) * 100}%`,
                     backgroundColor: total > 0 ? '#3b82f6' : '#e2e8f0'
                   }}
                 >
-                  <div className="weekly-bar-tooltip">
+                  <div className="monthly-bar-tooltip">
                     {total.toFixed(1)}h
                   </div>
                 </div>
               </div>
-              <div className="weekly-bar-value">
+              <div className="monthly-bar-value">
                 {total.toFixed(1)}h
               </div>
             </div>
@@ -303,7 +303,7 @@ function PortfolioSummary({ data, showOptimizationProjects }) {
                     <td>{entry.client}</td>
                     <td>{entry.project}</td>
                     <td>{entry.hours.toFixed(1)}h</td>
-                    <td>{entry.avgVelocity.toFixed(1)}h/week</td>
+                    <td>{entry.avgVelocity.toFixed(1)}h/month</td>
                   </tr>
                 ))}
               </tbody>

@@ -30,8 +30,8 @@ class DashboardRenderer {
   renderPortfolioSummary(portfolioVelocity) {
     console.log('\n📈 PORTFOLIO VELOCITY');
     console.log('-'.repeat(40));
-    console.log(`Total Average: ${portfolioVelocity} hours/week`);
-    console.log(`Total Capacity: ${(portfolioVelocity * 8).toFixed(1)} hours (8 weeks)`);
+    console.log(`Total Average: ${portfolioVelocity} hours/month`);
+    console.log(`Total Capacity: ${(portfolioVelocity * 6).toFixed(1)} hours (6 months)`);
   }
 
   renderClientTable(clients) {
@@ -136,14 +136,14 @@ class DashboardRenderer {
     
     clients.forEach((client, index) => {
       console.log(`\n${index + 1}. ${client.name}`);
-      console.log(`   Average Velocity: ${client.avg_velocity} hours/week`);
-      console.log(`   Weekly Breakdown:`);
+      console.log(`   Average Velocity: ${client.avg_velocity} hours/month`);
+      console.log(`   Monthly Breakdown:`);
       
-      client.weekly_hours.forEach((hours, weekIndex) => {
-        const weekNum = weekIndex + 1;
-        const barLength = hours > 0 ? Math.max(1, Math.round((hours / 20) * 30)) : 1; // Scale to 20h max
+      client.monthly_hours.forEach((hours, monthIndex) => {
+        const monthNum = monthIndex + 1;
+        const barLength = hours > 0 ? Math.max(1, Math.round((hours / 80) * 30)) : 1; // Scale to 80h max for monthly
         const bar = hours > 0 ? '█'.repeat(barLength) : '░';
-        console.log(`      Week ${weekNum}: ${hours.toString().padStart(4)}h [${bar}]`);
+        console.log(`      Month ${monthNum}: ${hours.toString().padStart(4)}h [${bar}]`);
       });
       
       if (index < clients.length - 1) {

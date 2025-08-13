@@ -23,6 +23,20 @@ class DateUtils {
   }
 
   /**
+   * Get the first day of a given month
+   */
+  getFirstDayOfMonth(date) {
+    return new Date(date.getFullYear(), date.getMonth(), 1);
+  }
+
+  /**
+   * Get the last day of a given month
+   */
+  getLastDayOfMonth(date) {
+    return new Date(date.getFullYear(), date.getMonth() + 1, 0);
+  }
+
+  /**
    * Format date as YYYY-MM-DD
    */
   formatDate(date) {
@@ -63,6 +77,37 @@ class DateUtils {
   }
 
   /**
+   * Generate monthly date ranges (1st to last day of each month)
+   * Returns array of { from: 'YYYY-MM-DD', to: 'YYYY-MM-DD' }
+   */
+  generateMonthlyRanges(numMonths = 6) {
+    const ranges = [];
+    const today = new Date();
+    
+    // Start from the current month
+    const currentMonth = new Date(today.getFullYear(), today.getMonth(), 1);
+    
+    for (let i = numMonths - 1; i >= 0; i--) {
+      const monthStart = new Date(currentMonth);
+      monthStart.setMonth(currentMonth.getMonth() - i);
+      
+      const monthEnd = new Date(monthStart);
+      monthEnd.setMonth(monthStart.getMonth() + 1, 0); // Last day of the month
+      
+      ranges.push({
+        from: this.formatDate(monthStart),
+        to: this.formatDate(monthEnd),
+        monthNumber: numMonths - i,
+        monthName: monthStart.toLocaleDateString('en-US', { month: 'long', year: 'numeric' }),
+        startDate: monthStart,
+        endDate: monthEnd
+      });
+    }
+    
+    return ranges;
+  }
+
+  /**
    * Get a human-readable description of the date range
    */
   getDateRangeDescription(range) {
@@ -80,6 +125,13 @@ class DateUtils {
     });
     
     return `${startStr} - ${endStr}`;
+  }
+
+  /**
+   * Get a human-readable description of the monthly range
+   */
+  getMonthlyRangeDescription(range) {
+    return range.monthName;
   }
 
   /**

@@ -2,7 +2,7 @@ import React from 'react';
 import VelocityBar from './VelocityBar.jsx';
 
 function ClientRow({ client, maxVelocity, dateRanges, rank }) {
-  const { name, avg_velocity, weekly_hours, total_hours_pack, total_hours_used, total_hours_remaining, latest_project } = client;
+  const { name, avg_velocity, monthly_hours, total_hours_pack, total_hours_used, total_hours_remaining, latest_project } = client;
   
   // Get velocity color based on performance
   const getVelocityColor = (velocity) => {
@@ -37,7 +37,7 @@ function ClientRow({ client, maxVelocity, dateRanges, rank }) {
             className="client-velocity"
             style={{ color: getVelocityColor(avg_velocity) }}
           >
-            {avg_velocity.toFixed(1)}h/week average
+            {avg_velocity.toFixed(1)}h/month average
           </div>
           <div className="client-pack-info">
             <span className="pack-label">{packInfo}</span>
@@ -68,12 +68,12 @@ function ClientRow({ client, maxVelocity, dateRanges, rank }) {
       </div>
       
       <div className="velocity-bars">
-        {weekly_hours.map((hours, index) => (
+        {monthly_hours.map((hours, index) => (
           <VelocityBar
             key={index}
             hours={hours}
-            maxHours={Math.max(...weekly_hours, 1)}
-            weekNumber={index + 1}
+            maxHours={Math.max(...monthly_hours, 1)}
+            monthNumber={index + 1}
             dateRange={dateRanges?.[index]}
           />
         ))}

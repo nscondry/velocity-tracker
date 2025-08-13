@@ -17,29 +17,29 @@ class VelocityTracker {
     try {
       console.log('🚀 Starting Velocity Tracker...\n');
       
-      // Generate 8 weeks of date ranges
-      const weeklyRanges = this.dateUtils.generateWeeklyRanges(8);
-      console.log('📅 Generated date ranges for the last 8 weeks:');
-      weeklyRanges.forEach((range, index) => {
-        const description = this.dateUtils.getDateRangeDescription(range);
-        console.log(`   Week ${index + 1}: ${description}`);
+      // Generate 6 months of date ranges
+      const monthlyRanges = this.dateUtils.generateMonthlyRanges(6);
+      console.log('📅 Generated date ranges for the last 6 months:');
+      monthlyRanges.forEach((range, index) => {
+        const description = this.dateUtils.getMonthlyRangeDescription(range);
+        console.log(`   Month ${index + 1}: ${description}`);
       });
       console.log();
 
       // Fetch data from Harvest API
       console.log('📊 Fetching data from Harvest API...');
-      const weeklyData = await this.harvestAPI.fetchAllWeeklyData(weeklyRanges);
+      const monthlyData = await this.harvestAPI.fetchAllMonthlyData(monthlyRanges);
       
-      if (weeklyData.length === 0) {
+      if (monthlyData.length === 0) {
         console.log('❌ No data retrieved from Harvest API. Please check your credentials and try again.');
         return;
       }
 
-      console.log(`✅ Successfully fetched data for ${weeklyData.length} weeks\n`);
+      console.log(`✅ Successfully fetched data for ${monthlyData.length} months\n`);
 
       // Process and aggregate data by client
       console.log('🔧 Processing client data...');
-      const clientData = await this.clientProcessor.aggregateByClient(weeklyData, this.harvestAPI);
+      const clientData = await this.clientProcessor.aggregateByClient(monthlyData, this.harvestAPI);
       
       if (clientData.length === 0) {
         console.log('📊 No client data found for the selected time period.');

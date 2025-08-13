@@ -52,26 +52,26 @@ app.get('/api/velocity', async (req, res) => {
     
     console.log('🚀 Fetching velocity data...');
     
-    // Generate 8 weeks of date ranges
-    const weeklyRanges = dateUtils.generateWeeklyRanges(8);
-    console.log(`📅 Generated date ranges: ${weeklyRanges.length} weeks`);
+    // Generate 6 months of date ranges
+    const monthlyRanges = dateUtils.generateMonthlyRanges(6);
+    console.log(`📅 Generated date ranges: ${monthlyRanges.length} months`);
     
     // Fetch data from Harvest API
     console.log('📊 Fetching data from Harvest API...');
-    const weeklyData = await harvestAPI.fetchAllWeeklyData(weeklyRanges);
+    const monthlyData = await harvestAPI.fetchAllMonthlyData(monthlyRanges);
     
-    if (weeklyData.length === 0) {
-      console.log('⚠️ No weekly data found');
+    if (monthlyData.length === 0) {
+      console.log('⚠️ No monthly data found');
       return res.status(404).json({ error: 'No data found from Harvest API' });
     }
 
-    console.log(`✅ Fetched ${weeklyData.length} weeks of data`);
+    console.log(`✅ Fetched ${monthlyData.length} months of data`);
 
     // Process and aggregate data by client
     let clientData = [];
     try {
       console.log('🔄 Processing client data...');
-      clientData = await clientProcessor.aggregateByClient(weeklyData, harvestAPI);
+      clientData = await clientProcessor.aggregateByClient(monthlyData, harvestAPI);
     } catch (error) {
       console.error('❌ Error processing client data:', error);
       return res.status(500).json({ 
@@ -92,11 +92,12 @@ app.get('/api/velocity', async (req, res) => {
     const velocityData = clientProcessor.calculateVelocities(clientData);
     
     // Add date ranges for display
-    const dateRanges = weeklyRanges.map(range => ({
-      week: range.weekNumber,
+    const dateRanges = monthlyRanges.map(range => ({
+      month: range.monthNumber,
+      monthName: range.monthName,
       from: range.from,
       to: range.to,
-      description: dateUtils.getDateRangeDescription(range)
+      description: dateUtils.getMonthlyRangeDescription(range)
     }));
 
     const response = {

@@ -121,6 +121,25 @@ class HarvestAPI {
     return allData;
   }
 
+  async fetchAllMonthlyData(months) {
+    const allData = [];
+    
+    for (const month of months) {
+      console.log(`Fetching data for ${month.monthName}...`);
+      const monthData = await this.fetchWeeklyData(month.from, month.to);
+      allData.push({
+        monthEnding: month.to,
+        monthName: month.monthName,
+        projects: monthData
+      });
+      
+      // Rate limiting - Harvest allows 100 requests per 15 seconds
+      await new Promise(resolve => setTimeout(resolve, 150));
+    }
+    
+    return allData;
+  }
+
   async fetchProjectBudgetData() {
     const url = `${this.baseUrl}/v2/reports/project_budget`;
     const params = new URLSearchParams({

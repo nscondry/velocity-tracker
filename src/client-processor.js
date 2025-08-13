@@ -74,7 +74,7 @@ class ClientProcessor {
     return clientName;
   }
 
-  async aggregateByClient(weeklyData, harvestAPI) {
+  async aggregateByClient(monthlyData, harvestAPI) {
     const clientMap = new Map();
 
     // First, fetch all project budget data
@@ -102,16 +102,16 @@ class ClientProcessor {
       clientBudgetMap.get(clientName).push(projectInfo);
     });
 
-    // Process weekly data and aggregate by client
-    weeklyData.forEach((weekData, weekIndex) => {
-      weekData.projects.forEach(project => {
+    // Process monthly data and aggregate by client
+    monthlyData.forEach((monthData, monthIndex) => {
+      monthData.projects.forEach(project => {
         const clientName = this.normalizeClientName(project.project.client.name);
         const hours = project.total_hours || 0;
 
         if (!clientMap.has(clientName)) {
           clientMap.set(clientName, {
             name: clientName,
-            weekly_hours: new Array(8).fill(0),
+            monthly_hours: new Array(6).fill(0),
             projects: [],
             total_hours_pack: 0,
             total_hours_used: 0,
@@ -122,7 +122,7 @@ class ClientProcessor {
         }
 
         const client = clientMap.get(clientName);
-        client.weekly_hours[weekIndex] += hours;
+        client.monthly_hours[monthIndex] += hours;
         
         // Add project info if not already added
         const existingProject = client.projects.find(p => p.project_id === project.project_id);
@@ -287,8 +287,8 @@ class ClientProcessor {
 
   calculateVelocities(clientData) {
     const clients = clientData.map(client => {
-      const totalHours = client.weekly_hours.reduce((sum, hours) => sum + hours, 0);
-      const avgVelocity = totalHours / 8;
+      const totalHours = client.monthly_hours.reduce((sum, hours) => sum + hours, 0);
+      const avgVelocity = totalHours / 6; // Average hours per month
       
       return {
         ...client,
