@@ -122,6 +122,11 @@ class ClientProcessor {
         }
 
         const client = clientMap.get(clientName);
+        
+        // Ensure monthly_hours array exists and has the right length
+        if (!Array.isArray(client.monthly_hours) || client.monthly_hours.length !== 6) {
+          client.monthly_hours = new Array(6).fill(0);
+        }
         client.monthly_hours[monthIndex] += hours;
         
         // Add project info if not already added
@@ -139,7 +144,8 @@ class ClientProcessor {
 
     // Calculate total hours used
     clientMap.forEach((client, clientName) => {
-      client.total_hours_used = client.weekly_hours.reduce((sum, hours) => sum + hours, 0);
+      const monthlyHours = Array.isArray(client.monthly_hours) ? client.monthly_hours : new Array(6).fill(0);
+      client.total_hours_used = monthlyHours.reduce((sum, hours) => sum + hours, 0);
     });
 
     // Now assign budget data to each client
@@ -287,11 +293,14 @@ class ClientProcessor {
 
   calculateVelocities(clientData) {
     const clients = clientData.map(client => {
-      const totalHours = client.monthly_hours.reduce((sum, hours) => sum + hours, 0);
+      // Ensure monthly_hours exists and is an array
+      const monthlyHours = Array.isArray(client.monthly_hours) ? client.monthly_hours : new Array(6).fill(0);
+      const totalHours = monthlyHours.reduce((sum, hours) => sum + hours, 0);
       const avgVelocity = totalHours / 6; // Average hours per month
       
       return {
         ...client,
+        monthly_hours: monthlyHours, // Ensure it's set
         avg_velocity: Math.round(avgVelocity * 10) / 10 // Round to 1 decimal place
       };
     });

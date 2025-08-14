@@ -2,7 +2,7 @@ import React from 'react';
 import VelocityBar from './VelocityBar.jsx';
 
 function ClientRow({ client, maxVelocity, dateRanges, rank }) {
-  const { name, avg_velocity, monthly_hours, total_hours_pack, total_hours_used, total_hours_remaining, latest_project } = client;
+  const { name, avg_velocity, monthly_hours = new Array(6).fill(0), total_hours_pack, total_hours_used, total_hours_remaining, latest_project } = client;
   
   // Get velocity color based on performance
   const getVelocityColor = (velocity) => {

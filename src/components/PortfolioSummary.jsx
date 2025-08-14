@@ -24,7 +24,8 @@ function PortfolioSummary({ data, showOptimizationProjects }) {
   const monthlyTotals = useMemo(() => {
     const totals = new Array(6).fill(0);
     filteredClients.forEach(client => {
-      client.monthly_hours.forEach((hours, monthIndex) => {
+      const monthlyHours = Array.isArray(client.monthly_hours) ? client.monthly_hours : new Array(6).fill(0);
+      monthlyHours.forEach((hours, monthIndex) => {
         totals[monthIndex] += hours;
       });
     });
